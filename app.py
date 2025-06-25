@@ -8,13 +8,17 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# PostgreSQL config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+# PostgreSQL config (safe fallback for first deploy)
+db_url = os.getenv('DATABASE_URL')
+if not db_url:
+    print("⚠️ DATABASE_URL not found — skipping DB init for now.")
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
 
-with app.app_context():
-    db.create_all()
+    with app.app_context():
+        db.create_all()
 
 @app.route('/invest', methods=['POST'])
 def invest():
